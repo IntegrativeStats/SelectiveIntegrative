@@ -2,30 +2,57 @@
 % Please edit documentation in R/srEC.R
 \name{srEC}
 \alias{srEC}
-\title{Selective and robust external-control borrowing strategy for evaluating treatment effect}
+\title{Selective and Robust External-Control Borrowing Strategy for Evaluating Treatment Effect}
 \usage{
 srEC(
-  data_rt,
-  data_ec = NULL,
-  rt.ctrl = caret::trainControl(method = "cv", number = 10),
-  hc.ctrl = caret::trainControl(method = "cv", number = 10),
+  data.rct,
+  data.ec = NULL,
+  ...,
+  ps.rct = NULL,
+  rct.trControl = caret::trainControl(method = "cv", number = 10L),
+  ec.trControl = caret::trainControl(method = "cv", number = 10L),
   method = "gbm",
-  ...
+  nu.vector = c(1, 2),
+  min.lambda = NULL
 )
 }
 \arguments{
-\item{data_rt}{A list contains X, Y and A for RT. The propensity scores P(A=1|X) can also be
-contained as \code{prob_A} (or \code{NULL}).}
+\item{data.rct}{The value object returned by \code{dataInput()} for the
+data from a randomized clinical trial (RCT). See \link{dataInput} for
+further details.}
 
-\item{data_ec}{A list contains X and Y for EC with treatment A=0.}
+\item{data.ec}{NULL or a list object. If NULL, only AIPW estimates will be
+calculated. If a list, each element is a list containing the X and Y for
+for a single external control (EC) dataset for which treatment A=0.}
 
-\item{rt.ctrl}{An object of \code{\link[caret:trainControl]{caret::trainControl()}} for \code{\link[caret:train]{caret::train()}}, which controls the
-computational nuances for fitting the outcome model using the RT dataset.}
+\item{...}{Other options used to fit the predictive models. Passed on to
+\code{\link[caret:train]{caret::train()}}.}
 
-\item{hc.ctrl}{An object of \code{\link[caret:trainControl]{caret::trainControl()}}, which controls the
-computational nuances for fitting the outcome model using the EC dataset.}
+\item{ps.rct}{NULL or a numeric vector. Optional input providing a vector of
+known propensity scores P(A=1|X) for the RCT dataset. If not provided,
+it will be estimated using the model defined in \code{data.rct$psName}.}
 
-\item{...}{Other options used to fit the predictive models. Passed on to \code{\link[caret:train]{caret::train()}}.}
+\item{rct.trControl}{An object of \code{\link[caret:trainControl]{caret::trainControl()}} for \code{\link[caret:train]{caret::train()}},
+which controls the computational nuances for fitting the outcome model
+using the RCT dataset.}
+
+\item{ec.trControl}{An object of \code{\link[caret:trainControl]{caret::trainControl()}}, which controls the
+computational nuances for fitting the outcome model using each EC dataset.}
+
+\item{method}{A character object. The classification or regression model
+\code{\link[caret:train]{caret::train()}} will use to estimate the outcome model.}
+
+\item{nu.vector}{NULL or a numeric vector. The proposed nu values, the selected
+value minimizes the trade-off between...}
+
+\item{min.lambda}{NULL, scalar numeric, or numeric vector.  The minimum value
+of lambda to consider in the glmnet regression.  If NULL,
+\eqn{min.lambda = n^-(1.0 + nu / 5.0) / 2.0}, where n is the total number
+of participants across the EC datasets and nu is each value of nu.vector.
+If a scalar, the same value is used for all values of nu.vector. If
+a numeric vector, it must be of the same length as nu.vector. The max is set as
+\eqn{min(n^(-0.1), 0.9)};
+100 evenly spaced lambda values between these extrema are considered.}
 }
 \value{
 A list with components:
@@ -37,8 +64,22 @@ final integrative estimation.
 }
 }
 \description{
-\code{srEC()} is a penalized dynamic integrative framework to augment a randomized trial (RT)
-with a external control (EC) dataset, in which the subject-level compatibility of the EC
-is assessed by a well-crafted penalty (e.g., adaptive lasso penalty). The parameter of interest
-is the average treatment effect.
+A penalized dynamic integrative framework to augment a randomized clinical
+trial (RT) with one or more external control (EC) datasets, in which the
+subject-level compatibility of each EC dataset is assessed by a well-crafted
+penalty (e.g., adaptive lasso penalty). The parameter of interest is the
+average treatment effect.
+}
+\examples{
+data(selectiveToy)
+
+data_rct <- dataInput(selectiveToy.rct, Y~A*X1 + A*X2, A~X1+X2)
+# can use dataInput() to construct data.ec input; use intercept model only
+# as a placeholder; it will be ignored by the package
+data_ec <- dataInput(selectiveToy.rwe, Y~A*X1 + A*X2, A ~ 1)
+
+result <- srEC(data.rct = data_rct,
+               data.ec = data_ec,
+               method = "glm")
+
 }

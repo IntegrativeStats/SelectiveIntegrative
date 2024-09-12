@@ -1,6 +1,6 @@
 Package: SelectiveIntegrative
 Title: Selective Integrative Analyses of the Average Treatment Effect Combining External Controls with the Standard Randomized Clinic Trial
-Version: 1.0
+Version: 0.1
 Authors@R: c(
     person("Shu", "Yang", , "syang24@ncsu.edu", role = c("aut")),
     person("Chenyin", "Gao", , "cgao6@ncsu.edu", role = c("aut", "cre"))
@@ -9,16 +9,26 @@ Description: Selective Integrative Analyses of the Average Treatment Effect Comb
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.2
 Imports: 
     glmnet (>= 4.1.4),
     MASS,
-    BB    
-Suggests: 
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
+    nleqslv,
+    caret
 Depends: 
     R (>= 2.10)
 LazyData: true
-
+Collate: 
+    'cvLasso.R'
+    'stopTests.R'
+    'dataInput.R'
+    'dataToy.R'
+    'utils_ACW.R'
+    'estimateAIPW.R'
+    'estimateEC.R'
+    'estimateACW.R'
+    'estimateACWLASSO.R'
+    'estimateFinal.R'
+    'estimateLASSO.R'
+    'fitModels.R'
+    'srEC.R'

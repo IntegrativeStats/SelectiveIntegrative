@@ -12,16 +12,17 @@
 #'   A list of numeric vectors. Each element of length n.rct + n.ec.
 #'
 #' @include estimateACW.R
-.estimateACWLASSO <- function(data.rct, data.ec, bias.lasso) {
+.estimateACWLASSO <- function(data.rct, data.ec, aipw.result, bias.lasso) {
   
   acw_result <- .estimateACW(data.rct = data.rct,
                              data.ec = data.ec,
+                             aipw.result = aipw.result,
                              bias = bias.lasso)
   n_rct <- nrow(data.rct$X)
   
   tau_hat <- mapply(function(x, y) {
                       zero_bias <- as.numeric(abs(y) < 1e-8)
-                      sum(x$tau * c(rep(1, n_rct), zero_bias), na.rm = TRUE) / n_rct
+                      sum(x * c(rep(1, n_rct), zero_bias), na.rm = TRUE) / n_rct
                     },
                     x = acw_result$tau.i,
                     y = bias.lasso, SIMPLIFY = FALSE) |> unlist()

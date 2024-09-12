@@ -128,10 +128,10 @@
 
 }
 
-#' Prepare Required Data Inputs to \code{elasticHTE()}
+#' Prepare Required Data Inputs to \code{srEC()}
 #'
 #' Provided a data.frame and models for the outcome and propensity regressions,
-#'   generates an list of the format required by \code{elasticHTE()}.
+#'   generates an list of the format required by \code{srEC()}.
 #'
 #' @param data A data.frame object. Must contain the outcome of interest,
 #'   the treatment and all model covariates.
@@ -158,9 +158,9 @@
 #'   }
 #'
 #' @examples
-#' data("elasticToy.cont")
+#' data("selectiveToy")
 #'
-#' data_object <- dataInput(elasticToy.cont.rct,
+#' data_object <- dataInput(selectiveToy.rct,
 #'                          outcome.model = Y ~ X1 + X2 * A,
 #'                          ps.model = A ~ X1 * X2)
 #'
@@ -229,6 +229,7 @@ dataInput <- function(data, outcome.model, ps.model) {
   input_obj
 }
 
+#' @include stopTests.R
 .isDI <- function(object, object.name = "object") {
 
   if (missing(object)) stop("`object` must be provided", call. = FALSE)
@@ -262,5 +263,25 @@ dataInput <- function(data, outcome.model, ps.model) {
     stop("`", object.name, "$psName` must be 1L or a character vector of X column headers",
          call. = FALSE)
   }
+  TRUE
+}
+
+
+.isReducedDI <- function(object, object.name = "object") {
+
+  if (missing(object)) stop("`object` must be provided", call. = FALSE)
+  
+  required_elements <- c("X", "Y")
+  
+  if (!is.vector(object, mode = "list") || !all(required_elements %in% names(object))) {
+    stop("`", object.name, "` must be a named list containing elements ",
+         paste(required_elements, collapse = ", "), call. = FALSE)
+  }
+
+  if (is.null(object$X) || !{.isNamedNumericMatrix(object$X) || ncol(object$X) == 0L}) {
+    stop("`", object.name, "$X` must be a matrix with column names",
+         call. = FALSE)
+  }
+  
   TRUE
 }

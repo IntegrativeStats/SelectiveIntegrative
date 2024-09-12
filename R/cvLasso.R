@@ -7,39 +7,38 @@
 #'
 #' @returns A scalar numeric.
 #' 
-.tradeOff2 <- function(bias.hat, bias, bias.score, n.rct) {
+.tradeOff <- function(bias.hat, bias, bias.score, n.rct) {
   
-  # the number of EC datasets
   K <- length(bias)
+  n_ei <- lengths(bias)
   
-  # the number of participants in each EC dataset
-  n_ec <- lengths(bias)
+  group_indicator <- rep(1:K, times = n_ei)
   
-  # vector to resplit bias from vector -> list
-  group_indicator <- rep(1L:K, times = n_ec)
+  zero_x <- {abs(bias.hat[-1L]) < 1e-8} |> drop()
+  tau_acw_lin <- unlist(bias) * zero_x
+
+  # for each EC, sum the non-zero bias
+  bias_high <- tapply(tau_acw_lin, group_indicator,
+                      function(x) { sum(x) / n.rct })
+  bias_high <- sum(bias_high^2)
   
-  # remove bias values that are predicted to be zero
-  zero_bias <- abs(bias.hat[-1L]) < 1e-8
-  tau_acw_lin <- unlist(bias) * zero_bias
-  
-  # STH I expected this to be n_ec or the number of nonzero n_ec
-  # the average bias in each EC dataset
-  bias_high <- tapply(tau_acw_lin, group_indicator, function(x) { sum(x) / n.rct })
-  # STH I expected this to be K not n.rct
-  bias_high <- sum(bias_high^2) / n.rct
-  
-  # remove the RCT participants from each bias.score
+  # zeros out the elements of bias_ec_score that have zero predicted bias
   tau_acw_score_all <- unlist(lapply(bias.score, function(x) { x[-(1L:n.rct)] }))
-  tau_acw_lin <- tau_acw_score_all * zero_bias
-  # STH I expected this to be n_ec or the number of nonzero n_ec
-  var_high <- tapply(tau_acw_lin, group_indicator,
-                     function(x) { sum({x - sum(x) / n.rct}^2) / n.rct })
-            
-  # keep only the RCT participants from each bias.score
-  tau_acw_score_rct <- lapply(bias.score, function(x) { x[(1L:n.rct)] })
-  var_ci <- lapply(tau_acw_score_rct, .var) |> unlist()
-            
-  bias_high + mean(var_high) + mean(var_ci)
+  tau_acw_lin <- tau_acw_score_all * zero_x
+  tau_acw_lin_list <- structure(split(tau_acw_lin,
+                                      f = factor(group_indicator)),
+                                names = NULL)
+  
+  tau_acw_score_recont <- mapply(function(x,y) { c(x[1L:n.rct], y) },
+                                 x = bias.score, y = tau_acw_lin_list,
+                                 SIMPLIFY = FALSE)
+
+  # variance
+  var_i <- unlist(mapply(function(x, y) { sum({x - mean(x)}^2) / n.rct },
+                         x = tau_acw_score_recont,
+                         y = n_ei, SIMPLIFY = FALSE))
+
+  mean(var_i) + bias_high
 }
 
 #' @noRd
@@ -48,12 +47,13 @@
 #' @param bias A list object. Each element a numeric vector.
 #' @param n.rct A scalar integer. The number of participants in the RCT
 #'   dataset
-#' @param bias.h.score A list object.
+#' @param bias.score A list object.
+#' @param min.lambda A scalar numeric.
 #' 
 #' @returns A numeric scalar.
 #' 
-#' @import glmnet glmnet predict.glmnet
-.cvLASSO <- function(nu, gamma.hat, bias, n.rct, bias.score) {
+#' @importFrom glmnet glmnet predict.glmnet
+.cvLASSO <- function(nu, gamma.hat, bias, n.rct, bias.score, min.lambda) {
   
   # number of participants in each EC dataset
   n_ec <- lengths(bias)
@@ -62,10 +62,12 @@
   Z_mat <- diag(sum(n_ec))
   
   # specify the lambda vector for cross-validation
-  lambda_vector <- seq(nrow(Z_mat)^-(1.0 + nu / 5.0) / 2.0,
-                       nrow(Z_mat)^(-0.1),
-                       length.out = 100L)
-  
+  if (is.null(min.lambda)) min.lambda <- nrow(Z_mat)^-(1.0 + nu / 5.0) / 2.0
+  max_lambda <- nrow(Z_mat)^{-0.1}
+  if (max_lambda < min.lambda) max_lambda <- max(0.9, min.lambda + 0.1)
+
+  lambda_vector <- seq(min.lambda, max_lambda, length.out = 100L)
+
   # construct the adaptive weights (subject-level)
   b_k_w <- c(1.0 / abs(gamma.hat)^nu)
   
@@ -74,7 +76,7 @@
   
   # replace any NA number
   b_k_w[is.na(b_k_w)] <- Inf
-  
+
   # fit the adaptive lasso penalized estimates for the subject-level bias
   fit_lasso <- tryCatch(glmnet::glmnet(Z_mat, unlist(bias), 
                                        family = "gaussian",
@@ -91,13 +93,18 @@
   
   # EC dataset membership for all participants
   
-  lasso_prediction <- glmnet::predict.glmnet(fit_lasso, newx = Z_mat, type = "coef")
-  
+  lasso_prediction <- predict(fit_lasso, newx = Z_mat, type = "coef")
+
   trade_off <-   apply(lasso_prediction, MARGIN = 2L,
-                       .tradeOff2,
+                       .tradeOff,
                        bias = bias, 
                        bias.score = bias.score, 
                        n.rct = n.rct)
-
-  min(trade_off)
+  
+  lambda_opt_idx <- which.min(trade_off)
+  
+  bias_lasso <- lasso_prediction[-1L, lambda_opt_idx] |> drop()
+  
+  list("min" = trade_off[lambda_opt_idx],
+       "bias" = bias_lasso)
 }

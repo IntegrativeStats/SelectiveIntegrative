@@ -9,21 +9,21 @@
 #' \itemize{
 #'   \item tau.hat: The estimated treatment effect.
 #'   \item sd.hat: The standard error of the estimated treatment effect
-#'   \item mu: A list containing my for A = 1 and A = 0
+#'   \item mu: A list containing mu for A = 1 and A = 0
 #'   \item CI: A list giving the "lower" and "upper" confidence intervals
 #' }
 #' 
 #' @include utils_ACW.R
-.aipw <- function(data.rct) {
+.estimateAIPW <- function(data.rct) {
   
   stopifnot(
     "`data.rct` must be a list containing element {A, Y, ps, Y.hat.A0, Y.hat.A1}" =
       !missing(data.rct) && 
       is.vector(data.rct, mode = "list") &&
-      all(c("A", "Y", "ps", "Y.hat.A0", "Y.hat.A1") %in% names(data.rct))
+      all(c("A", "Y", "ps", "Y.hat.A0", "Y.hat.A1") %in% names(data.rct)),
     "Elements A, Y, ps, Y.hat.A0, and Y.hat.A1 must all be numeric vectors of the same length" =
       all(lapply(data.rct[c("A", "Y", "ps", "Y.hat.A0", "Y.hat.A1")], is.vector, mode = "numeric") |> unlist()) &&
-      isTRUE(all.equal(lengths(data.rct[c("A", "Y", "ps", "Y.hat.A0", "Y.hat.A1")])))
+      all(lengths(data.rct[c("A", "Y", "ps", "Y.hat.A0", "Y.hat.A1")]) == length(data.rct$A))
   )
 
   n_rct <- length(data.rct$Y)
