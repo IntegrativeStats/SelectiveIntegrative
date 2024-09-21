@@ -48,8 +48,9 @@
 #' data_rct <- dataInput(selectiveToy.rct, Y~A*X1 + A*X2, A~X1+X2)
 #' 
 #' # can manually construct data_ec
-#' data_ec <- list("X" = data.matrix(selectiveToy.rwe[, c("X1","X2)]),
-#'                 "Y" = selectiveToy.rwe$Y)
+#' data_ec <- list("X" = data.matrix(selectiveToy.rwe[, c("X1","X2")]),
+#'                 "Y" = selectiveToy.rwe$Y,
+#'                 "A" = selectiveToy.rwe$A)
 #'                 
 #' # or use dataInput() to construct data.ec input using the rct models to
 #' # ensure that all required covariates are kept.
