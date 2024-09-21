@@ -52,13 +52,14 @@ test_that("`.lambdahat()` returns expected results intercept only models", {
   p_main_effect <- 1 
   n_ec <- 10000
   
-  lambda_hat <- BB::BBoptim(par = 0.0,
-                            fn = .calEqs,
-                            X.rct = matrix(0, nrow(data.rct$X), ncol = 0), 
-                            X.ec = matrix(0, nrow(data.ec$X), ncol = 0), 
-                            control = list(trace = TRUE,
-                                           ftol = 1e-8,
-                                           maxit = 500L))$par
+  lambda_hat <- nleqslv::nleqslv(x = rep(0.0, p_main_effect), # initial points
+                                 fn = .calEqs,
+                                 jac = .calEqsGradient,
+                                 X.rct = matrix(0, nrow(data.rct$X), ncol = 0), 
+                                 X.ec = matrix(0, nrow(data.ec$X), ncol = 0), 
+                                 control = list(trace = FALSE,
+                                                maxit = 500L),
+                                 method = 'Newton')$x
 
   expect_equal(.lambdaHat(data.rct, data.ec), lambda_hat)
 })
@@ -84,13 +85,14 @@ test_that("`.lambdahat()` returns expected results no covariates", {
   p_main_effect <- 1 
   n_ec <- 10000
   
-  lambda_hat <- BB::BBoptim(par = 0.0,
-                            fn = .calEqs,
-                            X.rct = matrix(0, 1000, ncol = 0), 
-                            X.ec = matrix(0, 10000, ncol = 0), 
-                            control = list(trace = TRUE,
-                                           ftol = 1e-8,
-                                           maxit = 500L))$par
+  lambda_hat <- nleqslv::nleqslv(x = rep(0.0, p_main_effect), # initial points
+                   fn = .calEqs,
+                   jac = .calEqsGradient,
+                   X.rct = matrix(0, 1000, ncol = 0), 
+                   X.ec = matrix(0, 10000, ncol = 0), 
+                   control = list(trace = FALSE,
+                                  maxit = 500L),
+                   method = 'Newton')$x
   
   expect_equal(.lambdaHat(data.rct, data.ec), lambda_hat)
 })
@@ -115,7 +117,7 @@ test_that("`.lambdahat()` returns expected results", {
   
   p_main_effect <- 51L
   n_ec <- 10
-  
+
   lambda_hat <- stats::optim(par = rep(0.0, 51L),
                              fn = .calEqsGMM,
                              X.rct = data.rct$X, 
@@ -126,6 +128,7 @@ test_that("`.lambdahat()` returns expected results", {
                              method = 'BFGS')$par
 
   expect_equal(.lambdaHat(data.rct, data.ec), lambda_hat)
+
 })
 
 .SACW <- function(X.rct, X.ec, q.hat.ec) {

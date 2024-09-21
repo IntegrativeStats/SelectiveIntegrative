@@ -6,7 +6,7 @@
   variable_name
 }
 
-.fitEC <- function(data.rct, data.ec, ec.trControl, method, i, ...) {
+.fitEC <- function(data.rct, data.ec, ec.trControl, method, ...) {
   
   if (!is.vector(data.ec, "list") ||
       !all(c("X", "Y") %in% names(data.ec))) {
@@ -41,29 +41,35 @@
   # ensure that caret can handle intercept only models. The NA
   # values of the coefficients do not cause issue
   form <- paste(data.rct$response.name, "~", 
-                ifelse(is.null(data.rct$mainName), "",
-                       paste(paste(data.rct$mainName, collapse = " + "),
-                             "+")), 
-                data.rct$tx.name, 
-                ifelse(is.null(data.rct$contName), "",
-                       paste("+",
-                             data.rct$tx.name, ":(", 
-                             paste(data.rct$contName, collapse = " + "),
-                             ")"))) |> stats::as.formula()
+                ifelse(is.null(data.rct$mainName), "XXXX1111",
+                       paste(data.rct$mainName, collapse = " + "))) |> stats::as.formula()
   
   df_ec <- data.frame(data.ec$X)
   df_ec[[data.rct$response.name]] <- data.ec$Y
   df_ec[[data.rct$tx.name]] <- data.ec$A
-  
-  fit_Y_ec <- tryCatch(caret::train(form,
-                                    data = df_ec,
-                                    trControl = ec.trControl,
-                                    method = method, ...),
-                       error = function(e) {
-                         stop("error encountered in caret::train() of EC outcome ",
-                              "for dataset ", i, "\n\t",
-                              e$message, call. = FALSE)
-                       })
+
+  if (is.null(data.rct$mainName)) {
+    # Have to fool caret sometimes for the intercept only models
+    df_ec$XXXX1111 <- 1.0
+    fit_Y_ec <- tryCatch(caret::train(form,
+                                      data = df_ec,
+                                      trControl = ec.trControl,
+                                      method = method, intercept = FALSE, ...),
+                          error = function(e) {
+                            stop("error encountered in caret::train() of EC outcome\n\t",
+                                 e$message, call. = FALSE)
+                          })
+    
+  } else {
+    fit_Y_ec <- tryCatch(caret::train(form,
+                                      data = df_ec,
+                                      trControl = ec.trControl,
+                                      method = method, ...),
+                         error = function(e) {
+                           stop("error encountered in caret::train() of EC outcome\n\t",
+                                e$message, call. = FALSE)
+                         })
+  }
   
   data.ec$Y.hat <- list(
     "rct" = predict(data.rct$fit.Y, newdata = df_ec) |> drop() |> unname(),
@@ -90,7 +96,7 @@
   df_rct <- data.frame(data.rct$X)
   df_rct[[data.rct$response.name]] <- data.rct$Y
   df_rct[[data.rct$tx.name]] <- data.rct$A
-
+  
   data.rct$fit.Y <- tryCatch(caret::train(form,
                                           data = df_rct,
                                           trControl = rct.trControl,
@@ -199,7 +205,7 @@
     
     for (i in seq_along(data.ec)) {
       data.ec[[i]] <- .fitEC(data.rct = data.rct, data.ec = data.ec[[i]],
-                             ec.trControl = ec.trControl, method = method, i = i, ...)
+                             ec.trControl = ec.trControl, method = method, ...)
     }
     
   }

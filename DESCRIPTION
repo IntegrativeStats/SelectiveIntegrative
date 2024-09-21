@@ -1,9 +1,10 @@
 Package: SelectiveIntegrative
 Title: Selective Integrative Analyses of the Average Treatment Effect Combining External Controls with the Standard Randomized Clinic Trial
-Version: 0.1
+Version: 0.2
 Authors@R: c(
     person("Shu", "Yang", , "syang24@ncsu.edu", role = c("aut")),
-    person("Chenyin", "Gao", , "cgao6@ncsu.edu", role = c("aut", "cre"))
+    person("Chenyin", "Gao", , "cgao6@ncsu.edu", role = c("aut")),
+    person("Shannon T.", "Holloway", , "cgao6@ncsu.edu", role = c("aut", "cre"))
     )
 Description: Selective Integrative Analyses of the Average Treatment Effect Combining External Controls with the Standard Randomized Clinic Trial.
 License: MIT + file LICENSE
