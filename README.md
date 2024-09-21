@@ -43,10 +43,11 @@ srEC(data.rct, data.ec = NULL,
 
 A list with components:
 
-- est: estimated average treatment effect by AIPW, ACW and the selective integrative estimator.
-- sd: estimated standard errors for the aforementioned estimators.
-- subset.idx: a subset of indices of the external controls which have been selected for the
-final integrative estimation.
+- 'aipw', 'acw', 'acw.lasso', 'acw.final':
+  each containing the estimated average treatment effect and standard errors
+  of the named estimator; and
+- 'subset.idx': a subset of indices of the external controls which have been
+  selected for the final integrative estimation.
 
 <h3>Examples</h3>
 

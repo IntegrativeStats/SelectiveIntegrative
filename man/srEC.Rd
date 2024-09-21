@@ -55,12 +55,13 @@ a numeric vector, it must be of the same length as nu.vector. The max is set as
 100 evenly spaced lambda values between these extrema are considered.}
 }
 \value{
-A list with components:
+A list with components
 \itemize{
-\item est: estimated average treatment effect by AIPW, ACW and the selective integrative estimator.
-\item sd: estimated standard errors for the aforementioned estimators.
-\item subset.idx: a subset of indices of the external controls which have been selected for the
-final integrative estimation.
+\item 'aipw', 'acw', 'acw.lasso', 'acw.final':
+each containing the estimated average treatment effect and standard errors
+of the named estimator; and
+\item subset.idx: a subset of indices of the external controls which have been
+selected for the final integrative estimation.
 }
 }
 \description{

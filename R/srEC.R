@@ -36,11 +36,12 @@
 #'   \eqn{min(n^(-0.1), 0.9)}; 
 #'   100 evenly spaced lambda values between these extrema are considered.
 #'
-#' @returns A list with components:
-#' * est: estimated average treatment effect by AIPW, ACW and the selective integrative estimator.
-#' * sd: estimated standard errors for the aforementioned estimators.
-#' * subset.idx: a subset of indices of the external controls which have been selected for the
-#' final integrative estimation.
+#' @returns A list with components
+#' * 'aipw', 'acw', 'acw.lasso', 'acw.final':
+#'    each containing the estimated average treatment effect and standard errors
+#'    of the named estimator; and 
+#' * subset.idx: a subset of indices of the external controls which have been 
+#'   selected for the final integrative estimation.
 #' 
 #' @examples
 #' data(selectiveToy)
