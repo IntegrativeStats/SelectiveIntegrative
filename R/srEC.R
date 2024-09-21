@@ -46,9 +46,14 @@
 #' data(selectiveToy)
 #' 
 #' data_rct <- dataInput(selectiveToy.rct, Y~A*X1 + A*X2, A~X1+X2)
-#' # can use dataInput() to construct data.ec input; use intercept model only
-#' # as a placeholder; it will be ignored by the package
-#' data_ec <- dataInput(selectiveToy.rwe, Y~A*X1 + A*X2, A ~ 1)
+#' 
+#' # can manually construct data_ec
+#' data_ec <- list("X" = data.matrix(selectiveToy.rwe[, c("X1","X2)]),
+#'                 "Y" = selectiveToy.rwe$Y)
+#'                 
+#' # or use dataInput() to construct data.ec input using the rct models to
+#' # ensure that all required covariates are kept.
+#' data_ec <- dataInput(selectiveToy.rwe, Y~A*X1 + A*X2, A ~ X1+X2)
 #' 
 #' result <- srEC(data.rct = data_rct,
 #'                data.ec = data_ec,

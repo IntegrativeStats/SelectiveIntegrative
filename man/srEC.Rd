@@ -70,16 +70,3 @@ subject-level compatibility of each EC dataset is assessed by a well-crafted
 penalty (e.g., adaptive lasso penalty). The parameter of interest is the
 average treatment effect.
 }
-\examples{
-data(selectiveToy)
-
-data_rct <- dataInput(selectiveToy.rct, Y~A*X1 + A*X2, A~X1+X2)
-# can use dataInput() to construct data.ec input; use intercept model only
-# as a placeholder; it will be ignored by the package
-data_ec <- dataInput(selectiveToy.rwe, Y~A*X1 + A*X2, A ~ 1)
-
-result <- srEC(data.rct = data_rct,
-               data.ec = data_ec,
-               method = "glm")
-
-}
