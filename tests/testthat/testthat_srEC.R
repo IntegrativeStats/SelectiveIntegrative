@@ -58,7 +58,8 @@ test_that("`srEC()` returns expected result", {
   
   aipw_result <- .estimateAIPW(data.rct = updated_data_objects$data.rct)
   
-  expected <- list("AIPW" = aipw_result[c("tau.hat", "sd.hat", "CI")]) 
+  expected <- list("aipw" = aipw_result[c("tau.hat", "sd.hat", "CI")]) 
+  expected$aipw$sd.hat <- expected$aipw$sd.hat / 10.0
   expect_equal(srEC(data.rct, rct.trControl = rct_trControl, 
                     method = "lm", metric = "MAE"),
                expected)
@@ -125,6 +126,11 @@ test_that("`srEC()` returns expected result", {
        "acw.lasso" = acw_lasso_result[c("tau.hat", "sd.hat")],
        "acw.final" = acw_final,
        "subset.idx" = ec_idx_lasso)
+  
+  expected$aipw$sd.hat <- expected$aipw$sd.hat / 10
+  expected$acw$sd.hat <- expected$acw$sd.hat / 10
+  expected$acw.lasso$sd.hat <- expected$acw.lasso$sd.hat / 10
+  expected$acw.final$sd.hat <- expected$acw.final$sd.hat / 10
   
   }
   

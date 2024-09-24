@@ -73,15 +73,15 @@ result <- srEC(data.rct = data_rct,
 
 # Expected Results:
 cat("AIPW:", format(result$aipw$tau.hat, digits = 3), 
-    "S.E.: ", format(result$aipw$sd.hat / sqrt(nrow(selectiveToy.rct)), digits = 3))
+    "S.E.: ", format(result$aipw$sd.hat, digits = 3), "\n")
 ## AIPW: -0.229 S.E.:  0.161
 
 cat("ACW:", format(result$acw$tau.hat, digits = 3), 
-    "S.E.: ", format(result$acw$sd.hat / sqrt(nrow(selectiveToy.rct)), digits = 3))
+    "S.E.: ", format(result$acw$sd.hat, digits = 3), "\n")
 ## ACW: -0.706 S.E.:  0.162
 
 cat("ACW.final:", format(result$acw.final$tau.hat, digits = 3), 
-    "S.E.: ", format(result$acw.final$sd.hat / sqrt(nrow(selectiveToy.rct)), digits = 3))
+    "S.E.: ", format(result$acw.final$sd.hat, digits = 3), "\n")
 ## ACW.final: -0.235 S.E.:  0.159
 
 </pre>

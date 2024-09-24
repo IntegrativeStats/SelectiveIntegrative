@@ -119,7 +119,9 @@ srEC <- function(data.rct,
   
   if (is.null(updated_data_objects$data.ec) || 
       length(updated_data_objects$data.ec) == 0L) {
-    return( list("AIPW" = aipw_result[c("tau.hat", "sd.hat", "CI")]) )
+    tmp_res <- list("aipw" = aipw_result[c("tau.hat", "sd.hat", "CI")])
+    tmp_res$aipw$sd.hat <- tmp_res$aipw$sd.hat / sqrt(n_rct)
+    return( tmp_res )
   }
 
   acw_result <- .estimateACW(data.rct = updated_data_objects$data.rct, 
@@ -134,10 +136,13 @@ srEC <- function(data.rct,
 
   if (length(ec_idx_lasso) == 0L) {
     # if no external controls are selected
-    return( list("aipw" = aipw_result[c("tau.hat", "sd.hat", "CI")],
-                 "acw" = list("tau.hat" = acw_result$tau.hat,
-                              "sd.hat" = acw_result$sd.hat),
-                 "subset.idx" = integer(0L)) )
+    tmp_res <- list("aipw" = aipw_result[c("tau.hat", "sd.hat", "CI")],
+                    "acw" = list("tau.hat" = acw_result$tau.hat,
+                                 "sd.hat" = acw_result$sd.hat),
+                    "subset.idx" = integer(0L))
+    tmp_res$aipw$sd.hat <- tmp_res$aipw$sd.hat / sqrt(n_rct)
+    tmp_res$acw$sd.hat <- tmp_res$acw$sd.hat / sqrt(n_rct)
+    return( tmp_res )
   }
   acw_lasso_result <- .estimateACWLASSO(data.rct = updated_data_objects$data.rct,
                                         data.ec = updated_data_objects$data.ec,
@@ -147,9 +152,15 @@ srEC <- function(data.rct,
   acw_final <- .estimateFinal(aipw.result = aipw_result, 
                               acw.lasso.result = acw_lasso_result)
   
-  list("aipw" = aipw_result[c("tau.hat", "sd.hat")],
-       "acw" = acw_result[c("tau.hat", "sd.hat")],
-       "acw.lasso" = acw_lasso_result[c("tau.hat", "sd.hat")],
-       "acw.final" = acw_final,
-       "subset.idx" = ec_idx_lasso)
+  tmp_res <- list("aipw" = aipw_result[c("tau.hat", "sd.hat")],
+                  "acw" = acw_result[c("tau.hat", "sd.hat")],
+                  "acw.lasso" = acw_lasso_result[c("tau.hat", "sd.hat")],
+                  "acw.final" = acw_final,
+                  "subset.idx" = ec_idx_lasso)
+  tmp_res$aipw$sd.hat <- tmp_res$aipw$sd.hat / sqrt(n_rct)
+  tmp_res$acw$sd.hat <- tmp_res$acw$sd.hat / sqrt(n_rct)
+  tmp_res$acw.lasso$sd.hat <- tmp_res$acw.lasso$sd.hat / sqrt(n_rct)
+  tmp_res$acw.final$sd.hat <- tmp_res$acw.final$sd.hat / sqrt(n_rct)
+  tmp_res
+  
 }
