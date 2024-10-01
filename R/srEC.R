@@ -36,7 +36,7 @@
 #'   \eqn{min(n^(-0.1), 0.9)}; 
 #'   100 evenly spaced lambda values between these extrema are considered.
 #'
-#' @returns A list with components
+#' @returns An S3 object of class SREC extending a list with components
 #' * 'aipw', 'acw', 'acw.lasso', 'acw.final':
 #'    each containing the estimated average treatment effect and standard errors
 #'    of the named estimator; and 
@@ -161,6 +161,8 @@ srEC <- function(data.rct,
   tmp_res$acw$sd.hat <- tmp_res$acw$sd.hat / sqrt(n_rct)
   tmp_res$acw.lasso$sd.hat <- tmp_res$acw.lasso$sd.hat / sqrt(n_rct)
   tmp_res$acw.final$sd.hat <- tmp_res$acw.final$sd.hat / sqrt(n_rct)
+  
+  class(tmp_res) <- "SREC"
   tmp_res
   
 }

@@ -162,14 +162,14 @@
   numo_ec <- q_hat_ec * r.X * zero.bias * {data.ec$Y - data.ec$Y.hat$rct}
   tmp <- r.X * numo_ec / deno_ec^2 * ME_ec_with_intercept
   dot_mu0_ec_q <- colSums(tmp, na.rm = TRUE) / n_rct
-  
+
   # {n_rct + n_ec}
   mu0_i <- c(data.rct$Y.hat.A0 + numo_rct / deno_rct, numo_ec / deno_ec)
   
   # {n_rct + n_ec}
   mu0_score <-  mu0_i - 
     drop(tcrossprod(S_results$S, {dot_mu0_rct_q + dot_mu0_ec_q} %*% S_results$inv.inf))
-  
+
   list("q.hat.ec" = q_hat_ec,
        "mu0.i" = mu0_i,
        "mu0.score" = mu0_score)
