@@ -1,4 +1,4 @@
-<h5>Development Level: <span style="color:blue">Beta</span></h5>
+<h5>Development Stage: <span style="color:blue">Beta</span></h5>
 
 # SelectiveIntegrative
 Selective Integrative Analyses of the Average Treatment Effect Combining External Controls with the Standard Randomized Clinic Trial.
