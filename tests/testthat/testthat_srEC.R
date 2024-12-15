@@ -54,7 +54,8 @@ test_that("`srEC()` returns expected result", {
                                      ps.rct = NULL,
                                      rct.trControl = rct_trControl,
                                      ec.trControl = rct_trControl,
-                                     method = "lm", metric = "MAE")
+                                     method = "lm", metric = "MAE",
+                                     outcome.type = "cont")
   
   aipw_result <- .estimateAIPW(data.rct = updated_data_objects$data.rct)
   
@@ -90,7 +91,8 @@ test_that("`srEC()` returns expected result", {
                                      ps.rct = NULL,
                                      rct.trControl = rct_trControl,
                                      ec.trControl = ec_trControl,
-                                     method = "lm", metric = "MAE")
+                                     method = "lm", metric = "MAE",
+                                     outcome.type = "cont")
   
   aipw_result <- .estimateAIPW(data.rct = updated_data_objects$data.rct)
   
@@ -131,8 +133,90 @@ test_that("`srEC()` returns expected result", {
   expected$acw$sd.hat <- expected$acw$sd.hat / 10
   expected$acw.lasso$sd.hat <- expected$acw.lasso$sd.hat / 10
   expected$acw.final$sd.hat <- expected$acw.final$sd.hat / 10
+  class(expected) <- "SREC"
   
   }
+
+  expect_equal(srEC(data.rct, data.ec[[1L]], rct.trControl = rct_trControl, 
+                    ec.trControl = ec_trControl, method = "lm", metric = "MAE"),
+               expected)
+  
+})
+
+test_that("`srEC()` returns expected result", {
+  
+  data.rct <- dataInput(withr::with_seed(34531,
+                                         data.frame("Y" = runif(100),
+                                                    "A" = rbinom(100, 1, 0.3),
+                                                    "X1" = rnorm(100, 1, 2),
+                                                    "X2" = rnorm(100, 2, 1))), 
+                        Y ~ 1 + A, A ~ 1)
+  
+  data.ec <- list(dataInput(withr::with_seed(3234124,
+                                             data.frame("Y" = runif(1000),
+                                                        "A" = rep(0, 1000),
+                                                        "X1" = rnorm(1000, 1, 2),
+                                                        "X2" = rnorm(1000, 2, 1))), 
+                            Y ~ 1 + A, A ~ 1))
+  
+  rct_trControl <- caret::trainControl(method = "none")
+  ec_trControl <- caret::trainControl(method = "none")
+  
+  data.rct.temp <- data.rct
+  data.rct.temp$mainName <- NULL
+  data.rct.temp$contName <- NULL
+  data.rct.temp$psName <- NULL
+  
+  updated_data_objects <- .fitModels(data.rct = data.rct.temp, data.ec = data.ec,
+                                     ps.rct = NULL,
+                                     rct.trControl = rct_trControl,
+                                     ec.trControl = ec_trControl,
+                                     method = "lm", metric = "MAE",
+                                     outcome.type = "cont")
+  
+  aipw_result <- .estimateAIPW(data.rct = updated_data_objects$data.rct)
+  
+  acw_result <- .estimateACW(data.rct = updated_data_objects$data.rct, 
+                             data.ec = updated_data_objects$data.ec,
+                             aipw.result = aipw_result)
+  
+  bias_lasso <- .estimateLASSO(acw.result = acw_result, n.rct = 100,
+                               nu.vector = c(1, 2), min.lambda = NULL)
+  
+  # obtain the indices for borrowing
+  ec_idx_lasso <- {abs(unlist(bias_lasso)) < 1e-8} |> which() |> unname()
+  
+  if (length(ec_idx_lasso) == 0L) {
+    # if no external controls are selected
+    expected <- list("aipw" = aipw_result[c("tau.hat", "sd.hat", "CI")],
+                     "acw" = list("tau.hat" = acw_result$tau.hat,
+                                  "sd.hat" = acw_result$sd.hat),
+                     "subset.idx" = integer(0L)) 
+  } else {
+    
+    acw_lasso_result <- .estimateACWLASSO(data.rct = updated_data_objects$data.rct,
+                                          data.ec = updated_data_objects$data.ec,
+                                          aipw.result = aipw_result,
+                                          bias.lasso = bias_lasso)
+    
+    acw_final <- .estimateFinal(aipw.result = aipw_result, 
+                                acw.lasso.result = acw_lasso_result)
+    
+    expected <- list("aipw" = aipw_result[c("tau.hat", "sd.hat")],
+                     "acw" = acw_result[c("tau.hat", "sd.hat")],
+                     "acw.lasso" = acw_lasso_result[c("tau.hat", "sd.hat")],
+                     "acw.final" = acw_final,
+                     "subset.idx" = ec_idx_lasso)
+    
+    expected$aipw$sd.hat <- expected$aipw$sd.hat / 10
+    expected$acw$sd.hat <- expected$acw$sd.hat / 10
+    expected$acw.lasso$sd.hat <- expected$acw.lasso$sd.hat / 10
+    expected$acw.final$sd.hat <- expected$acw.final$sd.hat / 10
+    class(expected) <- "SREC"
+    
+  }
+  
+  print(expected)
   
   expect_equal(srEC(data.rct, data.ec[[1L]], rct.trControl = rct_trControl, 
                     ec.trControl = ec_trControl, method = "lm", metric = "MAE"),

@@ -6,7 +6,7 @@
   variable_name
 }
 
-.fitEC <- function(data.rct, data.ec, ec.trControl, method, ...) {
+.fitEC <- function(data.rct, data.ec, ec.trControl, method, outcome.type, ...) {
   
   if (!is.vector(data.ec, "list") ||
       !all(c("X", "Y") %in% names(data.ec))) {
@@ -41,7 +41,7 @@
   # ensure that caret can handle intercept only models. The NA
   # values of the coefficients do not cause issue
   form <- paste(data.rct$response.name, "~", 
-                ifelse(is.null(data.rct$mainName), "XXXX1111",
+                ifelse(is.null(data.rct$mainName), "-1 + XXXX1111",
                        paste(data.rct$mainName, collapse = " + "))) |> stats::as.formula()
   
   df_ec <- data.frame(data.ec$X)
@@ -54,7 +54,7 @@
     fit_Y_ec <- tryCatch(caret::train(form,
                                       data = df_ec,
                                       trControl = ec.trControl,
-                                      method = method, intercept = FALSE, ...),
+                                      method = method, ...),
                           error = function(e) {
                             stop("error encountered in caret::train() of EC outcome\n\t",
                                  e$message, call. = FALSE)
@@ -72,14 +72,16 @@
   }
   
   data.ec$Y.hat <- list(
-    "rct" = predict(data.rct$fit.Y, newdata = df_ec) |> drop() |> unname(),
-    "ec" = predict(fit_Y_ec, newdata = df_ec) |> drop() |> unname()
+    "rct" = predict(data.rct$fit.Y, newdata = df_ec, 
+                    type = ifelse(outcome.type == "cont", "raw", "prob")) |> drop() |> unname(),
+    "ec" = predict(fit_Y_ec, newdata = df_ec, 
+                   type = ifelse(outcome.type == "cont", "raw", "prob")) |> drop() |> unname()
   )
   
   data.ec
 }
 
-.fitRCTOutcome <- function(data.rct, rct.trControl, method, ...) {
+.fitRCTOutcome <- function(data.rct, rct.trControl, method, outcome.type, ...) {
   
   # create model and fit the RCT data
   form <- paste(data.rct$response.name, "~", 
@@ -107,9 +109,11 @@
                         })
   
   df_rct[[data.rct$tx.name]] <- 0L
-  data.rct$Y.hat.A0 <- predict(data.rct$fit.Y, newdata = df_rct)
+  data.rct$Y.hat.A0 <- predict(data.rct$fit.Y, newdata = df_rct, 
+                               type = ifelse(outcome.type == "cont", "raw", "prob"))
   df_rct[[data.rct$tx.name]] <- 1L
-  data.rct$Y.hat.A1 <- predict(data.rct$fit.Y, newdata = df_rct)
+  data.rct$Y.hat.A1 <- predict(data.rct$fit.Y, newdata = df_rct, 
+                               type = ifelse(outcome.type == "cont", "raw", "prob"))
 
   data.rct
 }
@@ -160,12 +164,14 @@
 #' @importFrom stats as.formula glm predict
 #' @include dataInput.R stopTests.R
 .fitModels <- function(data.rct, data.ec, ps.rct, 
-                       rct.trControl, ec.trControl, method, ...) {
+                       rct.trControl, ec.trControl, method, outcome.type, ...) {
 
+  if(!missing(outcome.type)) outcome.type <- match.arg(outcome.type, c("cont", "bin"))
+  
   stopifnot(
-    "`data.rct` must be a list containing element {A, Y, X, mainName, contName, psName}" =
-      !missing(data.rct) && .isDI(data.rct, "data.rct"),
-    "`data.ec` must be a list, each element containing a list of X and Y" =
+    "`data.rct` must be a processed dataInput" =
+      !missing(data.rct) && .isDIProcessed(data.rct, "data.rct"),
+    "`data.ec` must be a dataInput object or NULL" =
       !missing(data.ec) && {is.null(data.ec) || 
       {is.vector(data.ec, "list") && length(data.ec) >= 1L &&
           all(lapply(data.ec, .isReducedDI, "each element of data.ec") |> unlist())}},
@@ -189,7 +195,8 @@
   
   data.rct <- .fitRCTOutcome (data.rct = data.rct, 
                               rct.trControl = rct.trControl, 
-                              method = method, ...)
+                              method = method, 
+                              outcome.type = outcome.type, ...)
   
   # estimate propensity score (if EC provided or ps not provided)
   if(is.null(ps.rct) || !is.null(data.ec)) {
@@ -205,7 +212,8 @@
     
     for (i in seq_along(data.ec)) {
       data.ec[[i]] <- .fitEC(data.rct = data.rct, data.ec = data.ec[[i]],
-                             ec.trControl = ec.trControl, method = method, ...)
+                             ec.trControl = ec.trControl, method = method, 
+                             outcome.type = outcome.type, ...)
     }
     
   }

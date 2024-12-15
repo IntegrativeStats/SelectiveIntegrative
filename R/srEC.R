@@ -79,6 +79,8 @@ srEC <- function(data.rct,
   
   # ensure that provided data match expected structure
   .isDI(data.rct, "data.rct")
+  
+  outcome.type <- "cont"
 
   stopifnot(
     "`data.ec` must be a list" = is.null(data.ec) || is.vector(data.ec, "list"),
@@ -112,7 +114,8 @@ srEC <- function(data.rct,
                                      ps.rct = ps.rct,
                                      rct.trControl = rct.trControl,
                                      ec.trControl = ec.trControl,
-                                     method = method, ...)
+                                     method = method, 
+                                     outcome.type = outcome.type, ...)
   rm(data.rct, data.ec)
   
   aipw_result <- .estimateAIPW(data.rct = updated_data_objects$data.rct)

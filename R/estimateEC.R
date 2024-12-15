@@ -14,10 +14,10 @@
   stopifnot(
     "`data.rct` must be a list containing {X, mainName}" = 
       !missing(data.rct) && is.vector(data.rct, "list") &&
-      all(c("X", "mainName") %in% names(data.rct)),
+      all(c("X") %in% names(data.rct)),
     "`data.ec` must be a list containing {X, mainName}" = 
       !missing(data.ec) && is.vector(data.ec, "list") &&
-      all(c("X", "mainName") %in% names(data.ec))
+      all(c("X") %in% names(data.ec))
   )
 
   p_main_effect <- length(data.rct$mainName) + 1L
@@ -124,9 +124,9 @@
   stopifnot(
     "`data.rct` must be a list containing {X, A, Y, mainName, ps, Y.hat.A0}" = 
       !missing(data.rct) && is.vector(data.rct, "list") && 
-      all(c("X", "A", "Y", "mainName", "ps", "Y.hat.A0") %in% names(data.rct)),
+      all(c("X", "A", "Y", "ps", "Y.hat.A0") %in% names(data.rct)),
     "`data.ec` must be a list containing {X, Y, mainName, ps, Y.hat}" = !missing(data.ec) &&
-      is.vector(data.ec, "list") && all(c("X", "Y", "mainName", "ps", "Y.hat") %in% names(data.ec)),
+      is.vector(data.ec, "list") && all(c("X", "Y", "ps", "Y.hat") %in% names(data.ec)),
     "`data.ec$Y.hat` must be a list containing element {rct}" =
       is.vector(data.ec$Y.hat, "list") && all(c("rct") %in% names(data.ec$Y.hat)),
     "`lambda.hat` must be a numeric vector of lenght p_main_effects" = 
@@ -198,10 +198,10 @@
   stopifnot(
     "`data.rct` must be a list containing elements {X, A, Y, mainName, ps, Y.hat.A0}" =
       !missing(data.rct) && is.vector(data.rct, "list") &&
-      all (c("A", "X", "Y", "mainName", "ps", "Y.hat.A0") %in% names(data.rct)),
+      all (c("A", "X", "Y", "ps", "Y.hat.A0") %in% names(data.rct)),
     "`data.ec` must be a list containing elements {X, Y, mainName, ps, Y.hat}" =
       !missing(data.ec) && is.vector(data.ec, "list") &&
-      all (c("X", "Y", "mainName", "ps", "Y.hat") %in% names(data.ec)),
+      all (c("X", "Y", "ps", "Y.hat") %in% names(data.ec)),
     "`data.ec$Y.hat` must be a list containing elements {rct, ec}" =
       is.vector(data.ec$Y.hat, "list") && all(c("ec", "rct") %in% names(data.ec$Y.hat)),
     "`bias` must be NULL or a numeric vector" = is.null(bias) || 

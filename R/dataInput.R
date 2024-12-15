@@ -266,6 +266,44 @@ dataInput <- function(data, outcome.model, ps.model) {
   TRUE
 }
 
+#' @include stopTests.R
+.isDIProcessed <- function(object, object.name = "object") {
+  
+  if (missing(object)) stop("`object` must be provided", call. = FALSE)
+  
+  required_elements <- c("X", "Y", "A")
+  
+  if (!is.vector(object, mode = "list") || !all(required_elements %in% names(object))) {
+    stop("`", object.name, "` must be a named list containing elements ",
+         paste(required_elements, collapse = ", "), call. = FALSE)
+  }
+  
+  if (!{.isNamedNumericMatrix(object$X) || ncol(object$X) == 0L}) {
+    stop("`", object.name, "$X` must be a matrix with column names",
+         call. = FALSE)
+  }
+  
+  if (!{is.null(object$mainName) ||
+      {.isCharacterVector(object$mainName) && all(object$mainName %in% colnames(object$X))}}) {
+    stop("`", object.name, "$mainName` must be NULL or a character vector of X column headers",
+         call. = FALSE)
+  }
+  
+  if (!{is.null(object$contName) ||
+      {.isCharacterVector(object$contName) && all(object$contName %in% colnames(object$X))}}) {
+    stop("`", object.name, "$contName` must be NULL or a character vector of X column headers",
+         call. = FALSE)
+  }
+  
+  if (!{is.null(object$psName) ||
+      {.isCharacterVector(object$psName) && all(object$psName %in% colnames(object$X))}}) {
+    stop("`", object.name, "$psName` must be NULL or a character vector of X column headers",
+         call. = FALSE)
+  }
+  TRUE
+}
+
+
 
 .isReducedDI <- function(object, object.name = "object") {
 
